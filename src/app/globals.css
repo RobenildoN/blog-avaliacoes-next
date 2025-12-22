@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Estilos personalizados para o Blog de Avaliações */
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.card {
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.navbar-brand {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+.btn {
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Estilos para os botões de navegação com fundo claro */
+.nav-link {
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.nav-link.bg-light {
+  background-color: rgba(108, 117, 125, 0.9) !important;
+  border: 1px solid rgba(108, 117, 125, 0.3);
+  backdrop-filter: blur(10px);
+  color: #ffffff !important;
+}
+
+.nav-link.bg-light:hover {
+  background-color: rgba(108, 117, 125, 1) !important;
+  color: #ffffff !important;
+  text-decoration: none;
+  border-color: rgba(108, 117, 125, 0.5);
+}
+
+/* Efeitos especiais para botões ativos */
+.nav-link.bg-light:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Responsividade para botões */
+@media (max-width: 768px) {
+  .nav-link {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .nav-link {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem !important;
+  }
+}
+
+.display-4 {
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+.lead {
+  font-size: 1.25rem;
+  font-weight: 300;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.5em 0.75em;
+}
+
+/* Responsividade aprimorada */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2rem;
+  }
+
+  .navbar-brand {
+    font-size: 1.25rem !important;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .display-4 {
+    font-size: 1.75rem;
+  }
+
+  .lead {
+    font-size: 1.1rem;
+  }
+}
