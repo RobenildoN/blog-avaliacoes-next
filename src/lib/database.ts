@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize";
+import sqlite3 from "sqlite3";
 
 let sequelize: Sequelize | null = null;
 let synced = false;
@@ -14,6 +15,7 @@ export function getSequelize(): Sequelize {
       dialect: "sqlite",
       storage: process.env.DB_STORAGE || "./database.sqlite",
       logging: process.env.NODE_ENV === "development" ? console.log : false,
+      dialectModule: sqlite3,
     });
   } else {
     sequelize = new Sequelize(
@@ -30,7 +32,7 @@ export function getSequelize(): Sequelize {
           acquire: 30000,
           idle: 10000,
         },
-      }
+      },
     );
   }
 
