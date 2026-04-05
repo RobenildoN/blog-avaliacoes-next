@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import '../../../models/index';
-import Category from '../../../models/Category';
 import { connectDB } from '../../../lib/database';
+import { initModels } from '../../../models';
 import { Category as CategoryType } from '../../../types';
 
 export default async function handler(
@@ -9,6 +8,7 @@ export default async function handler(
   res: NextApiResponse<CategoryType[] | { message: string; error?: string } | { message: string; category?: CategoryType }>
 ) {
   await connectDB();
+  const { Category } = initModels();
 
   switch (req.method) {
     case 'GET':
@@ -23,11 +23,12 @@ export default async function handler(
 
 async function getAllCategories(req: NextApiRequest, res: NextApiResponse<CategoryType[]>) {
   try {
+    const { Category } = initModels();
     const categories = await Category.findAll({
       order: [['name', 'ASC']]
     });
 
-    res.status(200).json(categories.map(cat => cat.toJSON()) as CategoryType[]);
+    res.status(200).json(categories.map((cat: any) => cat.toJSON()) as CategoryType[]);
   } catch (error) {
     console.error('Erro ao buscar categorias:', error);
     res.status(500).json([]);
@@ -36,6 +37,7 @@ async function getAllCategories(req: NextApiRequest, res: NextApiResponse<Catego
 
 async function createCategory(req: NextApiRequest, res: NextApiResponse<{ message: string; category?: CategoryType } | { message: string; error?: string }>) {
   try {
+    const { Category } = initModels();
     const { name } = req.body;
 
     if (!name || !name.trim()) {
@@ -44,7 +46,6 @@ async function createCategory(req: NextApiRequest, res: NextApiResponse<{ messag
       });
     }
 
-    // Verificar se a categoria já existe
     const existingCategory = await Category.findOne({
       where: { name: name.trim() }
     });

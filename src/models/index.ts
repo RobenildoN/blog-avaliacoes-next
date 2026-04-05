@@ -1,9 +1,25 @@
-import User from './User';
-import Category from './Category';
-import Post from './Post';
-import { setupAssociations } from './associations';
+import { getSequelize } from "../lib/database";
+import { initCategory, getCategory } from "./Category";
+import { initPost, getPost } from "./Post";
+import { initUser, getUser } from "./User";
 
-// Configurar associações
-setupAssociations();
+export function initModels() {
+  const sequelize = getSequelize();
+  const Category = initCategory(sequelize);
+  const Post = initPost(sequelize);
+  const User = initUser(sequelize);
 
-export { User, Category, Post, setupAssociations };
+  Post.belongsTo(Category, {
+    foreignKey: "categoryId",
+    as: "Category",
+  });
+
+  Category.hasMany(Post, {
+    foreignKey: "categoryId",
+    as: "Posts",
+  });
+
+  return { Category, Post, User };
+}
+
+export { getCategory, getPost, getUser };

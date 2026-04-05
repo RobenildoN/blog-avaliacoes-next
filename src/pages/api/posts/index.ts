@@ -3,10 +3,8 @@ import { Op, WhereOptions } from "sequelize";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
-import "../../../models/index";
-import Post from "../../../models/Post";
-import Category from "../../../models/Category";
 import { connectDB } from "../../../lib/database";
+import { initModels } from "../../../models";
 import { PostsResponse, Post as PostType } from "../../../types";
 
 export default async function handler(
@@ -18,6 +16,7 @@ export default async function handler(
   >
 ) {
   await connectDB();
+  const { Post, Category } = initModels();
 
   switch (req.method) {
     case "GET":
@@ -35,6 +34,7 @@ async function getAllPosts(
   res: NextApiResponse<PostsResponse>
 ) {
   try {
+    const { Post, Category } = initModels();
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 16;
     const offset = (page - 1) * limit;
@@ -57,7 +57,7 @@ async function getAllPosts(
       const targetCategories = await Category.findAll({
         where: { name: targetNames },
       });
-      const targetIds = targetCategories.map((c) => c.id);
+      const targetIds = targetCategories.map((c: any) => c.id);
       whereClause = {
         categoryId: { [Op.notIn]: targetIds.length ? targetIds : [-1] },
       };
@@ -88,7 +88,7 @@ async function getAllPosts(
     const totalPages = Math.ceil(totalPosts / limit);
 
     const response: PostsResponse = {
-      posts: posts.map((post) => post.toJSON()),
+      posts: posts.map((post: any) => post.toJSON()),
       pagination: {
         currentPage: page,
         totalPages: totalPages,
@@ -116,6 +116,7 @@ async function getAllPosts(
 
 async function createPost(req: NextApiRequest, res: NextApiResponse) {
   try {
+    const { Post, Category } = initModels();
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     const storage = multer.diskStorage({
       destination: function (_req, _file, cb) {
@@ -177,7 +178,6 @@ async function createPost(req: NextApiRequest, res: NextApiResponse) {
       body?.lido_ate !== undefined ? String(body.lido_ate) : undefined;
     const categoryId = Number(body?.categoryId ?? 0);
 
-    // Validações básicas
     if (!titulo || !resumo || !avaliacao || !categoryId) {
       return res.status(400).json({
         message: "Campos obrigatórios: titulo, resumo, avaliacao, categoryId",
@@ -190,7 +190,6 @@ async function createPost(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Verificar se a categoria existe
     const category = await Category.findByPk(categoryId);
     if (!category) {
       return res.status(400).json({
@@ -207,7 +206,6 @@ async function createPost(req: NextApiRequest, res: NextApiResponse) {
       imagem: file ? `/uploads/${file.filename}` : undefined,
     });
 
-    // Buscar o post criado com a categoria incluída
     const postWithCategory = await Post.findByPk(newPost.id, {
       include: [
         {

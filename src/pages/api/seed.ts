@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import Category from '../../models/Category';
-import Post from '../../models/Post';
 import { connectDB } from '../../lib/database';
+import { initModels } from '../../models';
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,9 +12,9 @@ export default async function handler(
   }
 
   await connectDB();
+  const { Category, Post } = initModels();
 
   try {
-    // Criar categorias de exemplo
     const categoriesData = [
       { name: 'Mangas' },
       { name: 'Livros' },
@@ -30,7 +29,6 @@ export default async function handler(
       categories.push(category);
     }
 
-    // Criar posts de exemplo
     const postsData = [
       {
         titulo: 'One Piece - Volume 1',

@@ -1,17 +1,16 @@
 "use client";
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import {
   Container,
   Navbar,
   NavbarBrand,
   Nav,
   NavItem,
-  NavLink,
   Button,
 } from "reactstrap";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 
 interface LayoutProps {
@@ -20,29 +19,38 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const router = useRouter();
-  const { isAuthenticated, user, logout, isLoading } = useAuth();
+  const pathname = usePathname();
+  const { isAuthenticated, user, logout } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleLogout = () => {
     logout();
     router.push("/");
   };
 
-  const handleCategoryFilter = (categoryId: number) => {
-    router.push(`/?category=${categoryId}`);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      router.push(`/?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm("");
+    if (pathname === "/") {
+      router.push("/");
+    }
   };
 
   return (
     <div className="min-vh-100 d-flex flex-column">
-      {/* Header */}
       <Navbar dark expand="md" className="mb-4" style={{ backgroundColor: "#D3D3D3" }}>
         <Container fluid className="px-4">
-          {/* Título centralizado */}
           <div className="d-flex justify-content-center w-100 position-relative">
             <NavbarBrand href="/" className="text-black fw-bold fs-4">
               Blog de Avaliações
             </NavbarBrand>
 
-            {/* Saudação no canto superior direito */}
             {isAuthenticated && (
               <div className="position-absolute end-0 top-50 translate-middle-y">
                 <span className="text-black small">
@@ -52,22 +60,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
           </div>
 
-          {/* Search Box - linha separada e centralizada */}
-          <div className="d-flex justify-content-center w-100 mt-2 mb-2">
+          <form className="d-flex justify-content-center w-100 mt-2 mb-2" onSubmit={handleSearch}>
             <div className="d-flex align-items-center w-50">
               <input
                 type="text"
                 placeholder="Pesquisar títulos e resumos..."
                 className="form-control me-2 w-100"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Button color="success" size="sm" className="me-2">
+              <Button color="success" size="sm" className="me-2" type="submit">
                 Pesquisar
               </Button>
-              <Button color="secondary" size="sm">
+              <Button color="secondary" size="sm" type="button" onClick={handleClear}>
                 Limpar
               </Button>
             </div>
-          </div>
+          </form>
 
           <div className="d-flex justify-content-center w-100">
             <Nav navbar className="flex-row gap-2">
@@ -154,10 +163,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </Container>
       </Navbar>
 
-      {/* Main Content */}
       <main className="flex-grow-1">{children}</main>
 
-      {/* Footer */}
       <footer className="text-white py-2 mt-2" style={{ backgroundColor: "#D3D3D3" }}>
         <Container className="d-flex justify-content-center">
           <small className=" text-black text-center mb-0">

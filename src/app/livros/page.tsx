@@ -1,5 +1,11 @@
-"use client";
 import CategoryPage from "../../components/CategoryPage";
-export default function LivrosPage() {
-  return <CategoryPage title="Livros" categoryName="Livros" />;
+
+export const dynamic = 'force-dynamic';
+
+interface PageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default function LivrosPage({ searchParams }: PageProps) {
+  return <CategoryPage title="Livros" categoryName="Livros" searchParams={searchParams} />;
 }

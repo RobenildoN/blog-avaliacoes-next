@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import bcrypt from 'bcryptjs';
-import User from '../../../models/User';
 import { connectDB } from '../../../lib/database';
+import { initModels } from '../../../models';
 import { AuthResponse, RegisterData } from '../../../types';
 
 export default async function handler(
@@ -14,11 +14,11 @@ export default async function handler(
   }
 
   await connectDB();
+  const { User } = initModels();
 
   try {
     const { email, password, name }: RegisterData = req.body;
 
-    // Validação básica
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -26,7 +26,6 @@ export default async function handler(
       });
     }
 
-    // Verificar se usuário já existe
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({
@@ -35,15 +34,13 @@ export default async function handler(
       });
     }
 
-    // Hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Criar usuário
     const newUser = await User.create({
       email,
       password: hashedPassword,
       name,
-      role: 'admin' // Primeiro usuário sempre será admin
+      role: 'admin'
     });
 
     res.status(201).json({

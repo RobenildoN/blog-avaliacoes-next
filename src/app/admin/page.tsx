@@ -5,9 +5,6 @@ import {
   Container,
   Row,
   Col,
-  Card,
-  CardBody,
-  CardTitle,
   Button,
   Alert,
   Spinner,
@@ -20,15 +17,13 @@ import {
   Label,
   Input,
 } from "reactstrap";
-import { useRouter } from "next/navigation";
 import Layout from "../../components/Layout";
 import PostCard from "../../components/PostCard";
 import { useAuth } from "../../contexts/AuthContext";
-import { Post, Category, CreatePostData, UpdatePostData } from "../../types";
+import { Post, Category, CreatePostData } from "../../types";
 
 export default function AdminPage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+  const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,26 +40,16 @@ export default function AdminPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const allowedCategoryNames = ["Mangas", "Livros", "Filmes", "Séries", "Cursos", "Outras"];
 
-  // Verificar autenticação
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  // Carregar dados
-  useEffect(() => {
-    if (isAuthenticated) {
-      const init = async () => {
-        try {
-          await fetch("/api/categories/ensure", { method: "POST" });
-        } catch (_) {}
-        await fetchCategories();
-        await fetchPosts();
-      };
-      init();
-    }
-  }, [isAuthenticated]);
+    const init = async () => {
+      try {
+        await fetch("/api/categories/ensure", { method: "POST" });
+      } catch {}
+      await fetchCategories();
+      await fetchPosts();
+    };
+    init();
+  }, []);
 
   const fetchPosts = async () => {
     try {
@@ -110,7 +95,6 @@ export default function AdminPage() {
       const url = editingPost ? `/api/posts/${editingPost.id}` : "/api/posts";
       const method = editingPost ? "PUT" : "POST";
 
-      let response: Response;
       if (imageFile) {
         const form = new FormData();
         form.set("titulo", formData.titulo);
@@ -118,17 +102,17 @@ export default function AdminPage() {
         form.set("avaliacao", String(formData.avaliacao));
         form.set("categoryId", String(formData.categoryId));
         if (formData.lido_ate) form.set("lido_ate", formData.lido_ate);
-        if (imageFile) form.set("imagem", imageFile);
-        response = await fetch(url, { method, body: form });
+        form.set("imagem", imageFile);
+        const response = await fetch(url, { method, body: form });
+        if (!response.ok) throw new Error("Erro ao salvar post");
       } else {
-        response = await fetch(url, {
+        const response = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
+        if (!response.ok) throw new Error("Erro ao salvar post");
       }
-
-      if (!response.ok) throw new Error("Erro ao salvar post");
 
       await fetchPosts();
       setModalOpen(false);
@@ -182,23 +166,16 @@ export default function AdminPage() {
     resetForm();
     setModalOpen(true);
   };
-  /* removed category creation UI */
 
-  // Loading state
-  if (isLoading) {
+  if (loading) {
     return (
       <Layout>
         <Container className="text-center py-5">
           <Spinner color="primary" />
-          <p className="mt-3">Verificando autenticação...</p>
+          <p className="mt-3">Carregando...</p>
         </Container>
       </Layout>
     );
-  }
-
-  // Redirect if not authenticated
-  if (!isAuthenticated) {
-    return null;
   }
 
   return (
@@ -212,7 +189,6 @@ export default function AdminPage() {
             <Button color="success" size="lg" onClick={openCreateModal}>
               Criar Novo Post
             </Button>
-            {/* categoria creation hidden */}
           </Col>
         </Row>
 
@@ -249,7 +225,6 @@ export default function AdminPage() {
           </Row>
         )}
 
-        {/* Modal de criação/edição */}
         <Modal
           isOpen={modalOpen}
           toggle={() => setModalOpen(!modalOpen)}
@@ -363,7 +338,6 @@ export default function AdminPage() {
             </ModalFooter>
           </Form>
         </Modal>
-        {/* category modal removed */}
       </Container>
     </Layout>
   );

@@ -1,4 +1,4 @@
-import sequelize from './database';
+import { getSequelize } from './database';
 import { setupAssociations } from '../models/associations';
 
 export const syncDatabase = async () => {
@@ -7,7 +7,7 @@ export const syncDatabase = async () => {
     setupAssociations();
 
     // Sincronizar todas as tabelas com force: true para recriar se necessário
-    await sequelize.sync({ force: true });
+    await getSequelize().sync({ force: true });
 
     console.log('✅ Banco de dados sincronizado com sucesso!');
   } catch (error) {

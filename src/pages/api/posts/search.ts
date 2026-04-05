@@ -1,9 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Op, WhereOptions } from 'sequelize';
-import '../../../models/index';
-import Post from '../../../models/Post';
-import Category from '../../../models/Category';
 import { connectDB } from '../../../lib/database';
+import { initModels } from '../../../models';
 import { PostsResponse } from '../../../types';
 
 export default async function handler(
@@ -11,6 +9,7 @@ export default async function handler(
   res: NextApiResponse<PostsResponse | { message: string }>
 ) {
   await connectDB();
+  const { Post, Category } = initModels();
 
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
@@ -33,7 +32,6 @@ export default async function handler(
       };
     }
 
-    // Get total count for pagination info
     const totalPosts = await Post.count({ where: whereCondition });
 
     const posts = await Post.findAll({
@@ -50,7 +48,7 @@ export default async function handler(
     const totalPages = Math.ceil(totalPosts / limit);
 
     const response: PostsResponse = {
-      posts: posts.map(post => post.toJSON()),
+      posts: posts.map((post: any) => post.toJSON()),
       pagination: {
         currentPage: page,
         totalPages: totalPages,

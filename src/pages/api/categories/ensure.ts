@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import '../../../models/index';
-import Category from '../../../models/Category';
 import { connectDB } from '../../../lib/database';
+import { initModels } from '../../../models';
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,6 +12,7 @@ export default async function handler(
   }
 
   await connectDB();
+  const { Category } = initModels();
 
   try {
     const names = ['Mangas', 'Livros', 'Filmes', 'Séries', 'Cursos', 'Outras'];

@@ -1,49 +1,50 @@
 import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
 
-dotenv.config();
-
-let sequelize: Sequelize;
+let sequelize: Sequelize | null = null;
 let synced = false;
 
-const dialect =
-  (process.env.DB_DIALECT as "mysql" | "postgres" | "sqlite") || "sqlite";
+export function getSequelize(): Sequelize {
+  if (sequelize) return sequelize;
 
-if (dialect === "sqlite") {
-  // Configuração para SQLite (mais simples para desenvolvimento)
-  sequelize = new Sequelize({
-    dialect: "sqlite",
-    storage: process.env.DB_STORAGE || "./database.sqlite",
-    logging: process.env.NODE_ENV === "development" ? console.log : false,
-  });
-} else {
-  // Configuração para MySQL/PostgreSQL
-  sequelize = new Sequelize(
-    process.env.DB_NAME || "blog_avaliacoes",
-    process.env.DB_USER || "root",
-    process.env.DB_PASSWORD || "",
-    {
-      host: process.env.DB_HOST || "localhost",
-      dialect: dialect,
+  const dialect =
+    (process.env.DB_DIALECT as "mysql" | "postgres" | "sqlite") || "sqlite";
+
+  if (dialect === "sqlite") {
+    sequelize = new Sequelize({
+      dialect: "sqlite",
+      storage: process.env.DB_STORAGE || "./database.sqlite",
       logging: process.env.NODE_ENV === "development" ? console.log : false,
-      pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000,
-      },
-    }
-  );
+    });
+  } else {
+    sequelize = new Sequelize(
+      process.env.DB_NAME || "blog_avaliacoes",
+      process.env.DB_USER || "root",
+      process.env.DB_PASSWORD || "",
+      {
+        host: process.env.DB_HOST || "localhost",
+        dialect: dialect,
+        logging: process.env.NODE_ENV === "development" ? console.log : false,
+        pool: {
+          max: 5,
+          min: 0,
+          acquire: 30000,
+          idle: 10000,
+        },
+      }
+    );
+  }
+
+  return sequelize;
 }
 
-// Testar conexão
 export const connectDB = async () => {
+  const db = getSequelize();
   try {
-    await sequelize.authenticate();
+    await db.authenticate();
     console.log("Conexão com o banco de dados estabelecida com sucesso.");
 
     if (!synced) {
-      await sequelize.sync();
+      await db.sync();
       synced = true;
       console.log("Tabelas sincronizadas com o banco de dados.");
     }
@@ -52,5 +53,3 @@ export const connectDB = async () => {
     throw error;
   }
 };
-
-export default sequelize;

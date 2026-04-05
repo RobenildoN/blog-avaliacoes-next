@@ -1,71 +1,78 @@
 # Blog de Avaliações - Next.js
 
-Aplicação web para avaliações de mangas, livros, filmes, séries e cursos, construída com Next.js (App Router), React e TypeScript, com API de posts e categorias, painel administrativo e upload de imagens.
+Aplicação web para avaliações de mangas, livros, filmes, séries e cursos, construída com Next.js 15 (App Router), React 19 e TypeScript, com API de posts e categorias, painel administrativo, busca funcional e upload de imagens.
 
 ## 🚀 Tecnologias Utilizadas
 
-- Next.js 15 (App Router)
-- React 19
-- TypeScript
-- Reactstrap + Bootstrap 5
-- Sequelize ORM
-- SQLite (padrão de desenvolvimento) e MySQL/PostgreSQL (suportados)
-- Multer para upload de imagens
-- JWT para autenticação básica
-- SCSS
+- **Next.js 15** (App Router + Pages API)
+- **React 19**
+- **TypeScript**
+- **Reactstrap + Bootstrap 5**
+- **Sequelize ORM** com inicialização lazy
+- **SQLite** (padrão de desenvolvimento) e MySQL/PostgreSQL (suportados)
+- **Multer** para upload de imagens
+- **JWT** com cookies HttpOnly
+- **Middleware** para proteção de rotas
 
 ## 📋 Funcionalidades
 
 ### ✅ Implementadas
 
-- Página inicial com paginação
-- Login com autenticação JWT
-- Painel Admin para criar, editar e deletar posts
-- Upload de imagem nos posts (criação e edição)
-- API REST para posts e categorias
-- Páginas por categoria: Mangas, Livros, Filmes, Séries, Cursos e Outras
-- Página de detalhes do post acessível pelo botão “Ler mais”
-- Layout responsivo; cabeçalho e rodapé em azul claro
-
-### 🔄 Planejadas
-
-- Migração para NextAuth.js
-- Melhores práticas de SEO e otimização
+- **Server-Side Rendering (SSR)** nas páginas públicas (home, categorias, detalhes)
+- **Busca funcional** por título e resumo com paginação
+- **Paginação** em todas as listagens
+- **Login com autenticação JWT** via cookies HttpOnly
+- **Middleware** protegendo rota `/admin`
+- **Painel Admin** para criar, editar e deletar posts
+- **Upload de imagem** nos posts (criação e edição)
+- **API REST** para posts e categorias
+- **Páginas por categoria**: Mangas, Livros, Filmes, Séries, Cursos e Outras
+- **Página de detalhes** do post
+- **Layout responsivo** com cabeçalho e rodapé
+- **Inicialização lazy** dos modelos do banco (evita erros no build)
 
 ## 🏗️ Arquitetura
 
 ```
 blog-avaliacoes-next/
 ├── src/
-│   ├── app/                    # Páginas Next.js (App Router)
-│   │   ├── page.tsx            # Página inicial
-│   │   ├── login/              # Página de login
-│   │   ├── admin/              # Painel administrativo
-│   │   ├── post/[id]/          # Página de detalhes do post
-│   │   ├── mangas/             # Página Mangas
-│   │   ├── livros/             # Página Livros
-│   │   ├── filmes/             # Página Filmes
-│   │   ├── series/             # Página Séries
-│   │   ├── cursos/             # Página Cursos
-│   │   └── outras/             # Página Outras
-│   ├── components/            # Componentes React
-│   │   ├── Layout.tsx         # Layout principal
-│   │   └── PostCard.tsx       # Card de post
-│   ├── lib/                   # Utilitários
-│   │   └── database.ts        # Configuração do banco
-│   ├── models/                # Modelos Sequelize
+│   ├── app/                        # Páginas Next.js (App Router)
+│   │   ├── page.tsx                # Home com busca e paginação (SSR)
+│   │   ├── login/                  # Página de login
+│   │   ├── register/               # Página de registro
+│   │   ├── admin/                  # Painel administrativo (protegido)
+│   │   ├── post/[id]/              # Detalhes do post (SSR)
+│   │   ├── mangas/                 # Página Mangas (SSR)
+│   │   ├── livros/                 # Página Livros (SSR)
+│   │   ├── filmes/                 # Página Filmes (SSR)
+│   │   ├── series/                 # Página Séries (SSR)
+│   │   ├── cursos/                 # Página Cursos (SSR)
+│   │   └── outras/                 # Página Outras (SSR)
+│   ├── middleware.ts               # Proteção de rotas com JWT
+│   ├── components/                 # Componentes React
+│   │   ├── Layout.tsx              # Layout com busca funcional
+│   │   ├── PostCard.tsx            # Card de post
+│   │   └── CategoryPage.tsx        # Template de categoria (SSR)
+│   ├── contexts/                   # Contextos React
+│   │   └── AuthContext.tsx         # Auth com cookies HttpOnly
+│   ├── lib/                        # Utilitários
+│   │   ├── database.ts             # Conexão lazy com Sequelize
+│   │   ├── data-fetching.ts        # Funções server-side para SSR
+│   │   ├── auth.ts                 # Helpers JWT
+│   │   └── sync-db.ts              # Sincronização do banco
+│   ├── models/                     # Modelos Sequelize (lazy init)
+│   │   ├── index.ts                # initModels() com associações
 │   │   ├── User.ts
 │   │   ├── Category.ts
-│   │   ├── Post.ts
-│   │   └── associations.ts
-│   ├── pages/api/             # API Routes
-│   │   ├── posts/              # CRUD de posts
-│   │   ├── categories/         # Gerenciamento de categorias
-│   │   │   └── ensure.ts       # Garante categorias padrão
-│   │   └── auth/               # Autenticação
-│   └── types/                 # Tipos TypeScript
+│   │   └── Post.ts
+│   ├── pages/api/                  # API Routes
+│   │   ├── posts/                  # CRUD + search
+│   │   ├── categories/             # Gerenciamento de categorias
+│   │   │   └── ensure.ts           # Garante categorias padrão
+│   │   └── auth/                   # login, logout, me, register, verify
+│   └── types/                      # Tipos TypeScript
 │       └── index.ts
-├── .env.local                 # Variáveis de ambiente
+├── .env.local                      # Variáveis de ambiente
 └── package.json
 ```
 
@@ -124,86 +131,69 @@ DB_STORAGE=./database.sqlite
 # DB_PASSWORD=your_password
 # DB_NAME=blog_avaliacoes
 
-# JWT Secret
+# JWT Secret (obrigatório em produção)
 JWT_SECRET=your_super_secret_jwt_key_here
-
-# NextAuth (planejado)
-# NEXTAUTH_URL=http://localhost:3000
-# NEXTAUTH_SECRET=your_nextauth_secret_here
 ```
 
 ## 📊 API Endpoints
 
 ### Posts
 
-- `GET /api/posts` lista paginada; filtros `categoryId`, `categoryName` e `others=true`
-- `POST /api/posts` cria post; aceita `application/json` ou `multipart/form-data` com campo `imagem`
-- `GET /api/posts/[id]` busca por ID
-- `PUT /api/posts/[id]` atualiza; aceita `multipart/form-data` com `imagem`
-- `DELETE /api/posts/[id]` remove post
-- `GET /api/posts/search` busca por termo
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/posts` | Lista paginada; filtros `categoryId`, `categoryName`, `others=true` |
+| `POST` | `/api/posts` | Cria post; aceita JSON ou `multipart/form-data` com campo `imagem` |
+| `GET` | `/api/posts/[id]` | Busca por ID |
+| `PUT` | `/api/posts/[id]` | Atualiza; aceita `multipart/form-data` com `imagem` |
+| `DELETE` | `/api/posts/[id]` | Remove post |
+| `GET` | `/api/posts/search` | Busca por termo (`?q=termo`) |
 
 ### Categorias
 
-- `GET /api/categories` lista categorias
-- `POST /api/categories` cria categoria
-- `POST /api/categories/ensure` garante categorias padrão: Mangas, Livros, Filmes, Séries, Cursos, Outras
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/categories` | Lista categorias |
+| `POST` | `/api/categories` | Cria categoria |
+| `POST` | `/api/categories/ensure` | Garante categorias padrão |
 
 ### Autenticação
 
-- `POST /api/auth/login` login de usuário
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/api/auth/login` | Login (define cookie HttpOnly) |
+| `POST` | `/api/auth/logout` | Logout (remove cookies) |
+| `GET` | `/api/auth/me` | Retorna usuário atual |
+| `POST` | `/api/auth/register` | Registra novo usuário |
+| `POST` | `/api/auth/verify` | Verifica token JWT |
 
-## 🎨 Componentes Principais
+## 🔐 Autenticação
 
-### Layout
+Autenticação implementada com **JWT + cookies HttpOnly**:
 
-Layout com navegação, cabeçalho e rodapé em azul claro.
-
-### PostCard
-
-Card para exibir posts com imagem, resumo, avaliação e categoria.
-
-### Formulários
-
-Formulários de criação e edição com suporte a upload de imagem.
+1. Login via `/api/auth/login` retorna cookie `auth_token` com flag `HttpOnly`
+2. Middleware em `src/middleware.ts` valida o token antes de acessar `/admin`
+3. `AuthContext` usa `/api/auth/me` para verificar sessão ao carregar
+4. Logout via `/api/auth/logout` limpa os cookies automaticamente
 
 ## 🖼️ Upload de Imagens
 
 - Armazenamento em `public/uploads` (criado automaticamente)
-- Limite de tamanho de arquivo: 5MB
+- Limite de tamanho: 5MB
 - Tipos aceitos: `image/*`
-
-## 🔐 Autenticação
-
-Implementada com JWT. Planejada migração para NextAuth.js.
 
 ## 📱 Responsividade
 
-A aplicação é totalmente responsiva, funcionando perfeitamente em:
-
+A aplicação é totalmente responsiva:
 - Desktop
 - Tablet
 - Mobile
 
 ## 🚀 Performance
 
-- SSR/SG com Next.js
-- API Routes otimizadas
-
-## 🔄 Migração do Projeto Original
-
-Este projeto foi refatorado a partir de uma aplicação Electron com:
-
-- Backend Express.js + Sequelize
-- Frontend HTML puro + JavaScript vanilla
-- App desktop Electron
-
-### Melhorias Implementadas
-
-- Performance com SSR/SSG
-- Manutenibilidade com TypeScript e componentes
-- UX com Reactstrap e design responsivo
-- Escalabilidade modular
+- **SSR** (Server-Side Rendering) em todas as páginas públicas
+- **Inicialização lazy** do Sequelize (conexão só ao usar)
+- **Modelos lazy** (`initModels()` evita erro no build)
+- **Dynamic routes** com `force-dynamic` para dados em tempo real
 
 ## 📝 Scripts Disponíveis
 
@@ -224,7 +214,7 @@ npm run lint         # Executa ESLint
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está sob a licença MIT.
 
 ## 👥 Autor
 

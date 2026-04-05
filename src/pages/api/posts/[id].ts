@@ -2,10 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
-import '../../../models/index';
-import Post from '../../../models/Post';
-import Category from '../../../models/Category';
 import { connectDB } from '../../../lib/database';
+import { initModels } from '../../../models';
 import { Post as PostType } from '../../../types';
 
 export default async function handler(
@@ -13,6 +11,7 @@ export default async function handler(
   res: NextApiResponse<PostType | { message: string; error?: string } | { message: string }>
 ) {
   await connectDB();
+  const { Post, Category } = initModels();
 
   const { id } = req.query;
 
@@ -33,8 +32,9 @@ export default async function handler(
   }
 }
 
-async function getPostById(req: NextApiRequest, res: NextApiResponse<PostType | { message: string }>, id: number) {
+async function getPostById(req: NextApiRequest, res: NextApiResponse<PostType | { message: string; error?: string }>, id: number) {
   try {
+    const { Post, Category } = initModels();
     const post = await Post.findByPk(id, {
       include: [{
         model: Category,
@@ -58,6 +58,7 @@ async function getPostById(req: NextApiRequest, res: NextApiResponse<PostType | 
 
 async function updatePost(req: NextApiRequest, res: NextApiResponse<PostType | { message: string; error?: string }>, id: number) {
   try {
+    const { Post, Category } = initModels();
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     const storage = multer.diskStorage({
       destination: function (_req, _file, cb) {
@@ -91,7 +92,11 @@ async function updatePost(req: NextApiRequest, res: NextApiResponse<PostType | {
         return resolve();
       });
     });
-    await runMiddleware(req, res, upload.single('imagem'));
+    await runMiddleware(req, res, upload.single('imagem') as unknown as (
+      req: NextApiRequest,
+      res: NextApiResponse,
+      next: (err?: unknown) => void
+    ) => void);
 
     const body = (req as unknown as { body: Record<string, unknown> }).body;
     const file = (req as unknown as { file?: { filename: string } }).file;
@@ -106,7 +111,6 @@ async function updatePost(req: NextApiRequest, res: NextApiResponse<PostType | {
       return res.status(404).json({ message: 'Post não encontrado' });
     }
 
-    // Validações básicas
     if (!titulo || !resumo || !avaliacao || !categoryId) {
       return res.status(400).json({
         message: 'Campos obrigatórios: titulo, resumo, avaliacao, categoryId'
@@ -119,7 +123,6 @@ async function updatePost(req: NextApiRequest, res: NextApiResponse<PostType | {
       });
     }
 
-    // Verificar se a categoria existe
     const category = await Category.findByPk(categoryId);
     if (!category) {
       return res.status(400).json({
@@ -136,7 +139,6 @@ async function updatePost(req: NextApiRequest, res: NextApiResponse<PostType | {
       imagem: file ? `/uploads/${file.filename}` : post.imagem
     });
 
-    // Buscar o post atualizado com a categoria incluída
     const updatedPost = await Post.findByPk(id, {
       include: [{
         model: Category,
@@ -160,8 +162,9 @@ export const config = {
   }
 };
 
-async function deletePost(req: NextApiRequest, res: NextApiResponse<{ message: string }>, id: number) {
+async function deletePost(req: NextApiRequest, res: NextApiResponse<{ message: string; error?: string }>, id: number) {
   try {
+    const { Post } = initModels();
     const post = await Post.findByPk(id);
 
     if (!post) {

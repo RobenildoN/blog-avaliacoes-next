@@ -5,12 +5,10 @@ import { UserResponse } from '../types';
 
 interface AuthContextType {
   user: UserResponse | null;
-  token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,10 +27,9 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserResponse | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isAuthenticated = !!user && !!token;
+  const isAuthenticated = !!user;
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -48,12 +45,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.ok && data.success) {
         setUser(data.user);
-        setToken(data.token);
-
-        // Salvar no localStorage
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
-
         return true;
       } else {
         return false;
@@ -64,56 +55,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
-  };
-
-  const checkAuth = async () => {
+  const logout = async () => {
     try {
-      const storedToken = localStorage.getItem('auth_token');
-      const storedUser = localStorage.getItem('auth_user');
-
-      if (storedToken && storedUser) {
-        // Verificar se o token ainda é válido fazendo uma requisição
-        const response = await fetch('/api/auth/verify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${storedToken}`,
-          },
-        });
-
-        if (response.ok) {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
-        } else {
-          // Token inválido, limpar dados
-          logout();
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
-      logout();
-    } finally {
-      setIsLoading(false);
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // ignore
     }
+    setUser(null);
   };
 
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     checkAuth();
   }, []);
 
   const value: AuthContextType = {
     user,
-    token,
     isLoading,
     isAuthenticated,
     login,
     logout,
-    checkAuth,
   };
 
   return (

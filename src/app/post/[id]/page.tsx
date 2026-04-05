@@ -1,63 +1,26 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Container, Row, Col, Spinner, Alert, Button, Badge } from "reactstrap";
+import { notFound } from "next/navigation";
+import { Container, Row, Col, Button, Badge } from "reactstrap";
 import Layout from "../../../components/Layout";
-import { Post } from "../../../types";
+import { getPostById } from "../../../lib/data-fetching";
 
-export default function PostDetailPage() {
-  const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    const id = Number(params?.id);
-    if (!id) {
-      setError("ID inválido");
-      setLoading(false);
-      return;
-    }
-    const fetchPost = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch(`/api/posts/${id}`);
-        if (!res.ok) throw new Error("Erro ao carregar post");
-        const data: Post = await res.json();
-        setPost(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro desconhecido");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPost();
-  }, [params?.id]);
+interface PostDetailProps {
+  params: Promise<{ id: string }>;
+}
 
-  if (loading) {
-    return (
-      <Layout>
-        <Container className="text-center py-5">
-          <Spinner color="primary" />
-        </Container>
-      </Layout>
-    );
+export default async function PostDetailPage({ params }: PostDetailProps) {
+  const resolvedParams = await params;
+  const id = Number(resolvedParams.id);
+
+  if (!id) {
+    notFound();
   }
 
-  if (error || !post) {
-    return (
-      <Layout>
-        <Container className="py-5">
-          <Alert color="danger">{error || "Post não encontrado"}</Alert>
-          <Button color="secondary" onClick={() => router.back()}>
-            Voltar
-          </Button>
-        </Container>
-      </Layout>
-    );
+  const post = await getPostById(id);
+
+  if (!post) {
+    notFound();
   }
 
   return (
@@ -106,7 +69,7 @@ export default function PostDetailPage() {
             {post.lido_ate && (
               <p className="text-muted">Progresso: {post.lido_ate}</p>
             )}
-            <Button color="secondary" onClick={() => router.back()}>
+            <Button color="secondary" href="/">
               Voltar
             </Button>
           </Col>
